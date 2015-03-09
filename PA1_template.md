@@ -78,7 +78,7 @@ head(TotalStepsPerDay, n = 25)
 hist(x = TotalStepsPerDay, breaks = 60)
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-2-1.png) 
+![](PA1_template_files/figure-html/TotalStepsPerDay-1.png) 
 
 ```r
 # 3. Calculae and report the mean and the median of the total number of steps taken per day.
@@ -122,7 +122,7 @@ head(AvgStepsPerInterval, n = 25)
 plot(names(AvgStepsPerInterval), AvgStepsPerInterval,type = "l")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
+![](PA1_template_files/figure-html/AvgStepsPerInterval-1.png) 
 
 ```r
 # 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
@@ -180,7 +180,7 @@ TotalStepsPerDay.na.rm <-tapply(X = df$steps, INDEX = df$date, FUN = sum, na.rm 
 hist(x = TotalStepsPerDay.na.rm, breaks = 60)
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
+![](PA1_template_files/figure-html/ImputMissingValues-1.png) 
 
 ```r
 # mean and median
@@ -244,16 +244,53 @@ df$dayofweek <-weekdays(df$date)
 df$daytype <-"weekday"
 df[substr(df$dayofweek,1,1) == "S", "daytype"] <-"weekend"
 df$daytype <-factor(df$daytype, levels = c("weekday","weekend"))
-# 2. Make a panel plot containg a time serie plot (i.e. type = "l") of the 5-minute interval (x-axix) and the average number of steps taken, averaged accors all weekdays or weekend days (y-axis)
+# 2. Make a panel plot containg a time serie plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged accors all weekdays or weekend days (y-axis)
 # average number of steps taken per interval per daytype - weekday & weekend
-AvgStepsPerIntervalByDayType <-tapply(X = df$steps, INDEX = list(df$interval, df$daytype), FUN = mean, na.rm = TRUE)
-par.default <-par(mfrow=c(1,2))
-plot(rownames(AvgStepsPerIntervalByDayType), AvgStepsPerIntervalByDayType[,"weekday"], type = "l")
-plot(rownames(AvgStepsPerIntervalByDayType), AvgStepsPerIntervalByDayType[,"weekend"], type = "l")
+mxAvgStepsPerIntervalByDayType <-tapply(X = df$steps, INDEX = list(df$interval, df$daytype), FUN = mean, na.rm = TRUE)
+str(mxAvgStepsPerIntervalByDayType)
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
+```
+##  num [1:288, 1:2] 2.3107 0.45 0.175 0.2 0.0889 ...
+##  - attr(*, "dimnames")=List of 2
+##   ..$ : chr [1:288] "0000" "0005" "0010" "0015" ...
+##   ..$ : chr [1:2] "weekday" "weekend"
+```
 
 ```r
-par(par.default)
+#
+require(reshape2)
 ```
+
+```
+## Loading required package: reshape2
+```
+
+```r
+dfnew <-melt(data = mxAvgStepsPerIntervalByDayType, measure.vars = c("weekday","weekend"), id.vars = c("interval"))
+names(dfnew) <-c("timeInterval","dayType","avgSteps")
+str(dfnew)
+```
+
+```
+## 'data.frame':	576 obs. of  3 variables:
+##  $ timeInterval: int  0 5 10 15 20 25 30 35 40 45 ...
+##  $ dayType     : Factor w/ 2 levels "weekday","weekend": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ avgSteps    : num  2.3107 0.45 0.175 0.2 0.0889 ...
+```
+
+```r
+#
+require("lattice")
+```
+
+```
+## Loading required package: lattice
+```
+
+```r
+xyplot(avgSteps ~ timeInterval | dayType, data = dfnew, type = "l", layout = c(1,2), xlab = "Interval", ylab = "Avg Steps Per Interval" )
+```
+
+![](PA1_template_files/figure-html/WeekdayWeekendDifference-1.png) 
+

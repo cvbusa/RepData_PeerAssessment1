@@ -1,9 +1,9 @@
 ---
 title: 'Reproducible Research: Peer Assessment 1'
 output:
-  pdf_document: default
   html_document:
     keep_md: yes
+  pdf_document: default
 ---
 
 
@@ -37,7 +37,7 @@ str(df)
 ```
 
 ## What is mean total number of steps taken per day?
-```{r}
+```{r, TotalStepsPerDay}
 # 1. Calculae the total number of steps taken per day
 TotalStepsPerDay <-tapply(X = df$steps, INDEX = df$date, FUN = sum, na.rm = TRUE)
 head(TotalStepsPerDay, n = 25)
@@ -51,7 +51,7 @@ hist(x = TotalStepsPerDay, breaks = 60)
 
 
 ## What is the average daily activity pattern?
-```{r}
+```{r, AvgStepsPerInterval}
 AvgStepsPerInterval <-tapply(X = df$steps, INDEX = df$interval, FUN = mean, na.rm = TRUE)
 head(AvgStepsPerInterval, n = 25)
 # 1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
@@ -61,7 +61,7 @@ plot(names(AvgStepsPerInterval), AvgStepsPerInterval,type = "l")
 ```
 
 ## Imputing missing values
-```{r}
+```{r, ImputMissingValues}
 # 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
 sum(!complete.cases(df))
 sum(is.na(df$steps))
@@ -104,17 +104,23 @@ medianTotalStepsPerDay.na.rm
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r}
+```{r, WeekdayWeekendDifference}
 df$dayofweek <-weekdays(df$date)
 # 1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or a weekend day.
 df$daytype <-"weekday"
 df[substr(df$dayofweek,1,1) == "S", "daytype"] <-"weekend"
 df$daytype <-factor(df$daytype, levels = c("weekday","weekend"))
-# 2. Make a panel plot containg a time serie plot (i.e. type = "l") of the 5-minute interval (x-axix) and the average number of steps taken, averaged accors all weekdays or weekend days (y-axis)
+# 2. Make a panel plot containg a time serie plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged accors all weekdays or weekend days (y-axis)
 # average number of steps taken per interval per daytype - weekday & weekend
-AvgStepsPerIntervalByDayType <-tapply(X = df$steps, INDEX = list(df$interval, df$daytype), FUN = mean, na.rm = TRUE)
-par.default <-par(mfrow=c(1,2))
-plot(rownames(AvgStepsPerIntervalByDayType), AvgStepsPerIntervalByDayType[,"weekday"], type = "l")
-plot(rownames(AvgStepsPerIntervalByDayType), AvgStepsPerIntervalByDayType[,"weekend"], type = "l")
-par(par.default)
+mxAvgStepsPerIntervalByDayType <-tapply(X = df$steps, INDEX = list(df$interval, df$daytype), FUN = mean, na.rm = TRUE)
+str(mxAvgStepsPerIntervalByDayType)
+#
+require(reshape2)
+dfnew <-melt(data = mxAvgStepsPerIntervalByDayType, measure.vars = c("weekday","weekend"), id.vars = c("interval"))
+names(dfnew) <-c("timeInterval","dayType","avgSteps")
+str(dfnew)
+#
+require("lattice")
+xyplot(avgSteps ~ timeInterval | dayType, data = dfnew, type = "l", layout = c(1,2), xlab = "Interval", ylab = "Avg Steps Per Interval" )
 ```
+
