@@ -10,9 +10,9 @@ if (!file.exists(strFile))
 {
      download.file(url = strUrl, destfile = "activity.zip", method = "curl", mode = "wb")  
 }
-lstFiles <-unzip(zipfile = strFile)
+lstOfFiles <-unzip(zipfile = strFile)
 #
-df <-read.csv(file = lstFiles[1], colClasses = c("integer","character","integer"))
+df <-read.csv(file = lstOfFiles[1], colClasses = c("integer","character","integer"))
 #
 str(df)
 ```
@@ -97,8 +97,6 @@ hist(x = TotalStepsPerDay, breaks = 60)
 ## [1] 10395
 ```
 
-
-
 ## What is the average daily activity pattern?
 
 ```r
@@ -119,7 +117,7 @@ head(AvgStepsPerInterval, n = 25)
 
 ```r
 # 1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
-plot(names(AvgStepsPerInterval), AvgStepsPerInterval,type = "l")
+plot(names(AvgStepsPerInterval), AvgStepsPerInterval,type = "l", xlab = "5 Minute Intervals")
 ```
 
 ![](PA1_template_files/figure-html/AvgStepsPerInterval-1.png) 
@@ -155,55 +153,40 @@ sum(is.na(df$steps))
 
 ```r
 # 2. Devise a strategy for filling in all of the missing values in the dataset.
-# create data frame "dfc" of complete case
-dfc <-df[complete.cases(df),]
-# create matrix of avg steps by interval (row name) and day of week (column name)
-dfcmatrix <-tapply(X = dfc$steps, INDEX = list(dfc$interval,dfc$dayofweek), mean, na.rm = TRUE)
+# create data frame "df_cc" of complete case
+df_cc <-df[complete.cases(df),]
+# create matrix of avg steps per interval (row name) by day of week (column name)
+mxAvgStepsPerIntervalByDow <-tapply(X = df_cc$steps, INDEX = list(df_cc$interval,df_cc$dayofweek), mean, na.rm = TRUE)
 # 3. Create a new dataset that is equal to the original dataset but with missing data filled in.
+df_narpl <-df
 # make copy of original steps variable
-df$steps.ori <-df$steps
-# loop through original data frame "df" and replace NA steps with avg steps from dfcmatrix
-for (i in 1:nrow(df))
+df_narpl$steps.ori <-df_narpl$steps
+# loop through data frame "df_narpl" and replace NA steps with avg steps from replacement matix
+for (i in 1:nrow(df_narpl))
 {
-     isteps <-df[i,"steps"]
-     iinterval <-df[i,"interval"]
-     idayofweek <-df[i,"dayofweek"]
+     isteps <-df_narpl[i,"steps"]
+     iinterval <-df_narpl[i,"interval"]
+     idayofweek <-df_narpl[i,"dayofweek"]
      # if steps is missing, replace with avg from dfcmatrix
      if(is.na(isteps))
      {
-          df[i,"steps"] <-dfcmatrix[iinterval,idayofweek]
+          df_narpl[i,"steps"] <-mxAvgStepsPerIntervalByDow[iinterval,idayofweek]
      }
 }
 # 4. Make a histogram of the total number of steps taken each day and calculate the mean and median total number of steps taken per day.
-TotalStepsPerDay.na.rm <-tapply(X = df$steps, INDEX = df$date, FUN = sum, na.rm = TRUE)
+TotalStepsPerDay_narpl <-tapply(X = df_narpl$steps, INDEX = df_narpl$date, FUN = sum, na.rm = TRUE)
 # histogram
-hist(x = TotalStepsPerDay.na.rm, breaks = 60)
+hist(x = TotalStepsPerDay_narpl, breaks = 60)
 ```
 
 ![](PA1_template_files/figure-html/ImputMissingValues-1.png) 
 
 ```r
 # mean and median
-meanTotalStepsPerDay.na.rm <-mean(TotalStepsPerDay.na.rm)
-medianTotalStepsPerDay.na.rm <-median(TotalStepsPerDay.na.rm)
-# compare with mean before inputing missing values
-meanTotalStepsPerDay
-```
-
-```
-## [1] 9354.23
-```
-
-```r
-meanTotalStepsPerDay.na.rm
-```
-
-```
-## [1] 10821.21
-```
-
-```r
-(meanDiff <-meanTotalStepsPerDay.na.rm - meanTotalStepsPerDay)
+meanTotalStepsPerDay_narpl <-mean(TotalStepsPerDay_narpl)
+medianTotalStepsPerDay_narpl <-median(TotalStepsPerDay_narpl)
+# compare with mean where incomplete records (NAs) were removed
+(meanDiff <-meanTotalStepsPerDay_narpl - meanTotalStepsPerDay)
 ```
 
 ```
@@ -211,42 +194,25 @@ meanTotalStepsPerDay.na.rm
 ```
 
 ```r
-# compare with median before inputing missing values
-medianTotalStepsPerDay
-```
-
-```
-## [1] 10395
-```
-
-```r
-medianTotalStepsPerDay.na.rm
-```
-
-```
-## [1] 11015
-```
-
-```r
-(medianDiff <-medianTotalStepsPerDay.na.rm - medianTotalStepsPerDay)
+# compare with median where incomplete records (NAs) were removed
+(medianDiff <-medianTotalStepsPerDay_narpl - medianTotalStepsPerDay)
 ```
 
 ```
 ## [1] 620
 ```
 
-
 ## Are there differences in activity patterns between weekdays and weekends?
 
 ```r
-df$dayofweek <-weekdays(df$date)
+df_narpl$dayofweek <-weekdays(df_narpl$date)
 # 1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or a weekend day.
-df$daytype <-"weekday"
-df[substr(df$dayofweek,1,1) == "S", "daytype"] <-"weekend"
-df$daytype <-factor(df$daytype, levels = c("weekday","weekend"))
-# 2. Make a panel plot containg a time serie plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged accors all weekdays or weekend days (y-axis)
-# average number of steps taken per interval per daytype - weekday & weekend
-mxAvgStepsPerIntervalByDayType <-tapply(X = df$steps, INDEX = list(df$interval, df$daytype), FUN = mean, na.rm = TRUE)
+df_narpl$daytype <-"weekday"
+df_narpl[substr(df_narpl$dayofweek,1,1) == "S", "daytype"] <-"weekend"
+df_narpl$daytype <-factor(df_narpl$daytype)
+# 2. Make a panel plot containg a time serie plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekdays or weekend days (y-axis)
+# create a matrix of average number of steps taken per interval per daytype (weekday & weekend)
+mxAvgStepsPerIntervalByDayType <-tapply(X = df_narpl$steps, INDEX = list(df_narpl$interval, df_narpl$daytype), FUN = mean, na.rm = TRUE)
 str(mxAvgStepsPerIntervalByDayType)
 ```
 
@@ -258,7 +224,7 @@ str(mxAvgStepsPerIntervalByDayType)
 ```
 
 ```r
-#
+# reshape the matrix to a data frame with 3 columns : interval, day type and avg steps per interval
 require(reshape2)
 ```
 
@@ -267,9 +233,10 @@ require(reshape2)
 ```
 
 ```r
-dfnew <-melt(data = mxAvgStepsPerIntervalByDayType, measure.vars = c("weekday","weekend"), id.vars = c("interval"))
-names(dfnew) <-c("timeInterval","dayType","avgSteps")
-str(dfnew)
+df_mlt <-melt(data = mxAvgStepsPerIntervalByDayType, measure.vars = c("weekday","weekend"), id.vars = c("interval"))
+# update column/variable names
+names(df_mlt) <-c("timeInterval","dayType","avgSteps")
+str(df_mlt)
 ```
 
 ```
@@ -280,7 +247,7 @@ str(dfnew)
 ```
 
 ```r
-#
+# create panel plots of avg steps by interal for each day type (weekday & weekend)
 require("lattice")
 ```
 
@@ -289,7 +256,7 @@ require("lattice")
 ```
 
 ```r
-xyplot(avgSteps ~ timeInterval | dayType, data = dfnew, type = "l", layout = c(1,2), xlab = "Interval", ylab = "Avg Steps Per Interval" )
+xyplot(avgSteps ~ timeInterval | dayType, data = df_mlt, type = "l", layout = c(1,2), xlab = "5 Minute Intervals", ylab = "Avg Steps Per 5 Minute Interval" )
 ```
 
 ![](PA1_template_files/figure-html/WeekdayWeekendDifference-1.png) 
