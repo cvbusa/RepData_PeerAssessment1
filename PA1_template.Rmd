@@ -1,14 +1,16 @@
 ---
 title: 'Reproducible Research: Peer Assessment 1'
 output:
-  pdf_document: default
   html_document:
+    fig_caption: yes
     keep_md: yes
+    toc: yes
+  pdf_document: default
 ---
 
 
 ## Loading and preprocessing the data
-```{r, LoadData}
+```{r, LoadDataProcessData}
 strUrl <-"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 strFile <-"activity.zip"
 if (!file.exists(strFile))
@@ -41,6 +43,9 @@ str(df)
 # 1. Calculate the total number of steps taken per day
 TotalStepsPerDay <-tapply(X = df$steps, INDEX = df$date, FUN = sum, na.rm = TRUE)
 head(TotalStepsPerDay, n = 25)
+```
+
+```{r, Plot_TotalStepsPerDay}
 # 2. Make a histogram of the total number of steps taken each day.
 hist(x = TotalStepsPerDay, breaks = 60)
 # 3. Calculae and report the mean and the median of the total number of steps taken per day.
@@ -49,10 +54,13 @@ hist(x = TotalStepsPerDay, breaks = 60)
 ```
 
 ## What is the average daily activity pattern?
-```{r, AvgStepsPerInterval}
+```{r, AvgDailyActivityPattern}
 AvgStepsPerInterval <-tapply(X = df$steps, INDEX = df$interval, FUN = mean, na.rm = TRUE)
 head(AvgStepsPerInterval, n = 25)
 # 1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+```
+
+```{r, Plot_AvgStepsPerInterval}
 plot(names(AvgStepsPerInterval), AvgStepsPerInterval,type = "l", xlab = "5 Minute Intervals")
 # 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 (maxAvgStepsPerInterval <-AvgStepsPerInterval[AvgStepsPerInterval == max(AvgStepsPerInterval)])
@@ -84,6 +92,9 @@ for (i in 1:nrow(df_narpl))
 }
 # 4. Make a histogram of the total number of steps taken each day and calculate the mean and median total number of steps taken per day.
 TotalStepsPerDay_narpl <-tapply(X = df_narpl$steps, INDEX = df_narpl$date, FUN = sum, na.rm = TRUE)
+```
+
+```{r, Plot_TotalStepsPerDayNAsReplaced}
 # histogram
 hist(x = TotalStepsPerDay_narpl, breaks = 60)
 # mean and median
@@ -96,7 +107,7 @@ medianTotalStepsPerDay_narpl <-median(TotalStepsPerDay_narpl)
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r, WeekdayWeekendDifference}
+```{r, ActivityWeekdayVsWeekend}
 df_narpl$dayofweek <-weekdays(df_narpl$date)
 # 1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or a weekend day.
 df_narpl$daytype <-"weekday"
@@ -113,6 +124,9 @@ df_mlt <-melt(data = mxAvgStepsPerIntervalByDayType, measure.vars = c("weekday",
 names(df_mlt) <-c("timeInterval","dayType","avgSteps")
 str(df_mlt)
 # create panel plots of avg steps by interal for each day type (weekday & weekend)
+```
+
+```{r, Plot_WeekdayVsWeekendActivity}
 require("lattice")
 xyplot(avgSteps ~ timeInterval | dayType, data = df_mlt, type = "l", layout = c(1,2), xlab = "5 Minute Intervals", ylab = "Avg Steps Per 5 Minute Interval" )
 ```

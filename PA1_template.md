@@ -73,12 +73,13 @@ head(TotalStepsPerDay, n = 25)
 ##       2492
 ```
 
+
 ```r
 # 2. Make a histogram of the total number of steps taken each day.
 hist(x = TotalStepsPerDay, breaks = 60)
 ```
 
-![](PA1_template_files/figure-html/TotalStepsPerDay-1.png) 
+![](PA1_template_files/figure-html/Plot_TotalStepsPerDay-1.png) 
 
 ```r
 # 3. Calculae and report the mean and the median of the total number of steps taken per day.
@@ -117,10 +118,14 @@ head(AvgStepsPerInterval, n = 25)
 
 ```r
 # 1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+```
+
+
+```r
 plot(names(AvgStepsPerInterval), AvgStepsPerInterval,type = "l", xlab = "5 Minute Intervals")
 ```
 
-![](PA1_template_files/figure-html/AvgStepsPerInterval-1.png) 
+![](PA1_template_files/figure-html/Plot_AvgStepsPerInterval-1.png) 
 
 ```r
 # 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
@@ -173,11 +178,15 @@ for (i in 1:nrow(df_narpl))
 }
 # 4. Make a histogram of the total number of steps taken each day and calculate the mean and median total number of steps taken per day.
 TotalStepsPerDay_narpl <-tapply(X = df_narpl$steps, INDEX = df_narpl$date, FUN = sum, na.rm = TRUE)
+```
+
+
+```r
 # histogram
 hist(x = TotalStepsPerDay_narpl, breaks = 60)
 ```
 
-![](PA1_template_files/figure-html/ImputMissingValues-1.png) 
+![](PA1_template_files/figure-html/Plot_TotalStepsPerDayNAsReplaced-1.png) 
 
 ```r
 # mean and median
@@ -246,6 +255,10 @@ str(df_mlt)
 
 ```r
 # create panel plots of avg steps by interal for each day type (weekday & weekend)
+```
+
+
+```r
 require("lattice")
 ```
 
@@ -257,5 +270,5 @@ require("lattice")
 xyplot(avgSteps ~ timeInterval | dayType, data = df_mlt, type = "l", layout = c(1,2), xlab = "5 Minute Intervals", ylab = "Avg Steps Per 5 Minute Interval" )
 ```
 
-![](PA1_template_files/figure-html/WeekdayWeekendDifference-1.png) 
+![](PA1_template_files/figure-html/Plot_WeekdayVsWeekendActivity-1.png) 
 
