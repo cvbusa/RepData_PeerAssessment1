@@ -1,11 +1,12 @@
 ---
 title: 'Reproducible Research: Peer Assessment 1'
 output:
+  word_document: default
+  pdf_document: default
   html_document:
     fig_caption: yes
     keep_md: yes
     toc: yes
-  pdf_document: default
 ---
 
 
