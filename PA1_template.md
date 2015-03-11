@@ -55,7 +55,7 @@ str(df)
 ## What is mean total number of steps taken per day?
 
 ```r
-# 1. Calculae the total number of steps taken per day
+# 1. Calculate the total number of steps taken per day
 TotalStepsPerDay <-tapply(X = df$steps, INDEX = df$date, FUN = sum, na.rm = TRUE)
 head(TotalStepsPerDay, n = 25)
 ```
@@ -153,10 +153,8 @@ sum(is.na(df$steps))
 
 ```r
 # 2. Devise a strategy for filling in all of the missing values in the dataset.
-# create data frame "df_cc" of complete case
-df_cc <-df[complete.cases(df),]
-# create matrix of avg steps per interval (row name) by day of week (column name)
-mxAvgStepsPerIntervalByDow <-tapply(X = df_cc$steps, INDEX = list(df_cc$interval,df_cc$dayofweek), mean, na.rm = TRUE)
+# create a matrix of avg steps per interval (row name) by day of week (column name)
+mxAvgStepsPerIntervalByDow <-tapply(X = df$steps, INDEX = list(df$interval,df$dayofweek), mean, na.rm = TRUE)
 # 3. Create a new dataset that is equal to the original dataset but with missing data filled in.
 df_narpl <-df
 # make copy of original steps variable
