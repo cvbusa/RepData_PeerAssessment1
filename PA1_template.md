@@ -1,5 +1,6 @@
 # Reproducible Research: Peer Assessment 1
 
+------------------------------------
 
 ## Loading and preprocessing the data
 
@@ -52,7 +53,13 @@ str(df)
 ##  $ daytype     : Factor w/ 2 levels "weekday","weekend": 1 1 1 1 1 1 1 1 1 1 ...
 ```
 
-## What is mean total number of steps taken per day?
+* #### The data was loaded using `read.csv`.
+* #### Existing variables were copied and then transformed: `interval.ori` & `date.ori`.
+* #### New variables were created: `dayofweek` & `daytype`.
+
+----------------------------------------------------
+
+## What is the mean total number of steps taken per day?
 
 ```r
 # 1. Calculate the total number of steps taken per day
@@ -76,7 +83,7 @@ head(TotalStepsPerDay, n = 25)
 
 ```r
 # 2. Make a histogram of the total number of steps taken each day.
-hist(x = TotalStepsPerDay, breaks = 60)
+hist(x = TotalStepsPerDay, breaks = 60, xlab = "Total Steps Per Day - NAs removed")
 ```
 
 ![](PA1_template_files/figure-html/Plot_TotalStepsPerDay-1.png) 
@@ -97,6 +104,10 @@ hist(x = TotalStepsPerDay, breaks = 60)
 ```
 ## [1] 10395
 ```
+* #### The mean number of steps taken each day is 9354.
+* #### The median number of steps taken each day is 10395.
+
+----------------------------------------------
 
 ## What is the average daily activity pattern?
 
@@ -137,11 +148,16 @@ plot(names(AvgStepsPerInterval), AvgStepsPerInterval,type = "l", xlab = "5 Minut
 ## 206.1698
 ```
 
-## Imputing missing values
+* #### The average daily activity pattern was plotted.
+* #### The 5-minute interval that, on average, contains the maximum number of steps (206) is interval 0835.
+
+--------------------------
+
+## Imputing Missing Values.
 
 ```r
 # 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
-sum(!complete.cases(df))
+(missingcases <-sum(!complete.cases(df)))
 ```
 
 ```
@@ -149,7 +165,7 @@ sum(!complete.cases(df))
 ```
 
 ```r
-sum(is.na(df$steps))
+(missingsteps <-sum(is.na(df$steps)))
 ```
 
 ```
@@ -164,7 +180,7 @@ mxAvgStepsPerIntervalByDow <-tapply(X = df$steps, INDEX = list(df$interval,df$da
 df_narpl <-df
 # make copy of original steps variable
 df_narpl$steps.ori <-df_narpl$steps
-# loop through data frame "df_narpl" and replace NA steps with avg steps from replacement matix
+# loop through data frame "df_narpl" and replace NA steps with avg steps from replacement matrix
 for (i in 1:nrow(df_narpl))
 {
      isteps <-df_narpl[i,"steps"]
@@ -179,19 +195,84 @@ for (i in 1:nrow(df_narpl))
 # 4. Make a histogram of the total number of steps taken each day and calculate the mean and median total number of steps taken per day.
 TotalStepsPerDay_narpl <-tapply(X = df_narpl$steps, INDEX = df_narpl$date, FUN = sum, na.rm = TRUE)
 ```
+* #### The total number of missing values in the dataset is 2304.
+* #### A new data frame `df_narpl` was created where missing steps (NAs) were replaced with the average steps of the matching interval and day of the week. Parts of the update matrix `mxAvgStepsPerIntervalByDow` are shown below:
+
+
+```r
+head(mxAvgStepsPerIntervalByDow)
+```
+
+```
+##      Friday   Monday Saturday   Sunday Thursday   Tuesday Wednesday
+## 0000      0 1.428571        0 0.000000    5.875 0.0000000     4.250
+## 0005      0 0.000000        0 0.000000    0.000 0.0000000     2.250
+## 0010      0 0.000000        0 0.000000    0.000 0.0000000     0.875
+## 0015      0 0.000000        0 0.000000    1.000 0.0000000     0.000
+## 0020      0 0.000000        0 0.000000    0.000 0.4444444     0.000
+## 0025      0 5.000000        0 7.428571    1.375 1.4444444     0.000
+```
+
+```r
+head(mxAvgStepsPerIntervalByDow[97:117,],12)
+```
+
+```
+##         Friday    Monday  Saturday    Sunday Thursday   Tuesday Wednesday
+## 0800  63.85714  24.57143  23.42857  63.28571   43.250  55.55556   227.125
+## 0805  37.71429  42.00000  31.42857  80.85714   49.250  89.11111   134.375
+## 0810 165.85714  55.42857  51.28571 113.85714  234.875 149.00000   116.875
+## 0815 223.14286  14.71429  38.71429 119.14286  283.000 176.77778   215.500
+## 0820 257.28571 101.28571  28.57143 124.57143  232.500 170.33333   262.000
+## 0825 261.00000  29.71429  61.28571  68.14286  237.625 140.66667   266.000
+## 0830 273.85714 114.42857  92.42857 123.42857  185.875 163.22222   276.500
+## 0835 279.14286 225.85714 155.57143 101.14286  252.125 154.88889   273.000
+## 0840 233.71429 172.14286 143.71429 100.42857  264.500 177.55556   265.000
+## 0845 234.28571 155.57143 215.71429 104.28571  241.250 156.33333   151.375
+## 0850 328.57143 212.14286 209.57143 106.85714  225.750 116.22222   108.500
+## 0855 192.42857 197.00000 220.28571  49.00000  133.250 199.66667   172.250
+```
+
+```r
+tail(mxAvgStepsPerIntervalByDow)
+```
+
+```
+##        Friday Monday Saturday    Sunday Thursday   Tuesday Wednesday
+## 2330 0.000000      0        0  2.428571    0.000 10.444444     3.375
+## 2335 0.000000      0        0 25.142857    0.000  5.111111     3.375
+## 2340 0.000000      0        0 13.428571    2.125  7.111111     0.000
+## 2345 0.000000      0        0  3.714286    0.000  0.000000     1.000
+## 2350 0.000000      0        0  0.000000    0.500  0.000000     1.000
+## 2355 1.142857      0        0  0.000000    0.000  2.222222     3.625
+```
 
 
 ```r
 # histogram
-hist(x = TotalStepsPerDay_narpl, breaks = 60)
+hist(x = TotalStepsPerDay_narpl, breaks = 60, xlab = "Total Steps Per Day - NAs Replaced with Avg Values")
 ```
 
 ![](PA1_template_files/figure-html/Plot_TotalStepsPerDayNAsReplaced-1.png) 
 
 ```r
 # mean and median
-meanTotalStepsPerDay_narpl <-mean(TotalStepsPerDay_narpl)
-medianTotalStepsPerDay_narpl <-median(TotalStepsPerDay_narpl)
+(meanTotalStepsPerDay_narpl <-mean(TotalStepsPerDay_narpl))
+```
+
+```
+## [1] 10821.21
+```
+
+```r
+(medianTotalStepsPerDay_narpl <-median(TotalStepsPerDay_narpl))
+```
+
+```
+## [1] 11015
+```
+
+```r
 # compare with mean where incomplete records (NAs) were removed
 (meanDiff <-meanTotalStepsPerDay_narpl - meanTotalStepsPerDay)
 ```
@@ -209,6 +290,10 @@ medianTotalStepsPerDay_narpl <-median(TotalStepsPerDay_narpl)
 ## [1] 620
 ```
 
+* #### The impact of imputing the missing data (replacing NAs with the average steps per mathcing interval and day of the week) changed the histogram of the total number of steps per day. The mean number of steps per day increased by 1467 steps and the median number of steps per day increased by 620 steps.
+
+----------------------------------------------------------------------------
+
 ## Are there differences in activity patterns between weekdays and weekends?
 
 ```r
@@ -217,7 +302,7 @@ df_narpl$dayofweek <-weekdays(df_narpl$date)
 df_narpl$daytype <-"weekday"
 df_narpl[substr(df_narpl$dayofweek,1,1) == "S", "daytype"] <-"weekend"
 df_narpl$daytype <-factor(df_narpl$daytype)
-# 2. Make a panel plot containg a time serie plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekdays or weekend days (y-axis)
+# 2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekdays or weekend days (y-axis)
 # create a matrix of average number of steps taken per interval per daytype (weekday & weekend)
 mxAvgStepsPerIntervalByDayType <-tapply(X = df_narpl$steps, INDEX = list(df_narpl$interval, df_narpl$daytype), FUN = mean, na.rm = TRUE)
 str(mxAvgStepsPerIntervalByDayType)
@@ -231,7 +316,7 @@ str(mxAvgStepsPerIntervalByDayType)
 ```
 
 ```r
-# reshape the matrix to a data frame with 3 columns : interval, day type and avg steps per interval
+# reshape (melt) the matrix to a data frame with 3 columns : interval, day type and avg steps per interval
 require(reshape2)
 ```
 
@@ -267,8 +352,11 @@ require("lattice")
 ```
 
 ```r
-xyplot(avgSteps ~ timeInterval | dayType, data = df_mlt, type = "l", layout = c(1,2), xlab = "5 Minute Intervals", ylab = "Avg Steps Per 5 Minute Interval" )
+xyplot(avgSteps ~ timeInterval | dayType, data = df_mlt, type = "l", layout = c(1,2), xlab = "5 Minute Intervals", ylab = "Avg Steps" )
 ```
 
 ![](PA1_template_files/figure-html/Plot_WeekdayVsWeekendActivity-1.png) 
 
+* #### The panel plots show a different pattern of interval activity for weekdays vs weekends --- one prominent difference is the increased activity between 10am and 6pm on weekends compared to the same period on weekdays.
+
+-----------------------------------------------
