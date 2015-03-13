@@ -7,14 +7,15 @@
 ```r
 strUrl <-"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 strFile <-"activity.zip"
+
 if (!file.exists(strFile))
 {
      download.file(url = strUrl, destfile = "activity.zip", method = "curl", mode = "wb")  
 }
 lstOfFiles <-unzip(zipfile = strFile)
-#
+
+
 df <-read.csv(file = lstOfFiles[1], colClasses = c("integer","character","integer"))
-#
 str(df)
 ```
 
@@ -26,19 +27,17 @@ str(df)
 ```
 
 ```r
-#
 df$interval.ori <-df$interval
 df$interval <-sprintf(fmt = "%04d", df$interval)
-#
+
 df$date.ori <-df$date
 df$date <-as.Date(df$date)
-#
+
 df$dayofweek <-weekdays(df$date)
-#
+
 df$daytype <-"weekday"
 df[substr(df$dayofweek,1,1) == "S", "daytype"] <-"weekend"
 df$daytype <-factor(df$daytype, levels = c("weekday","weekend"))
-#
 str(df)
 ```
 
@@ -89,7 +88,7 @@ hist(x = TotalStepsPerDay, breaks = 60, xlab = "Total Steps Per Day - NAs remove
 ![](PA1_template_files/figure-html/Plot_TotalStepsPerDay-1.png) 
 
 ```r
-# 3. Calculae and report the mean and the median of the total number of steps taken per day.
+# 3. Calculate and report the mean and the median of the total number of steps taken per day.
 (meanTotalStepsPerDay <-mean(TotalStepsPerDay))
 ```
 
@@ -112,6 +111,7 @@ hist(x = TotalStepsPerDay, breaks = 60, xlab = "Total Steps Per Day - NAs remove
 ## What is the average daily activity pattern?
 
 ```r
+# create an array of the average steps per each 5 minute interval
 AvgStepsPerInterval <-tapply(X = df$steps, INDEX = df$interval, FUN = mean, na.rm = TRUE)
 head(AvgStepsPerInterval, n = 25)
 ```
@@ -127,12 +127,11 @@ head(AvgStepsPerInterval, n = 25)
 ## 0.3773585 0.2641509 0.0000000 0.0000000
 ```
 
+* #### Make a time series plot of the average daily activity pattern per interval.
+
+
 ```r
 # 1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
-```
-
-
-```r
 plot(names(AvgStepsPerInterval), AvgStepsPerInterval,type = "l", xlab = "5 Minute Intervals")
 ```
 
@@ -148,7 +147,6 @@ plot(names(AvgStepsPerInterval), AvgStepsPerInterval,type = "l", xlab = "5 Minut
 ## 206.1698
 ```
 
-* #### The average daily activity pattern was plotted.
 * #### The 5-minute interval that, on average, contains the maximum number of steps (206) is interval 0835.
 
 --------------------------
@@ -176,11 +174,17 @@ plot(names(AvgStepsPerInterval), AvgStepsPerInterval,type = "l", xlab = "5 Minut
 # 2. Devise a strategy for filling in all of the missing values in the dataset.
 # create a matrix of avg steps per interval (row name) by day of week (column name)
 mxAvgStepsPerIntervalByDow <-tapply(X = df$steps, INDEX = list(df$interval,df$dayofweek), mean, na.rm = TRUE)
-# 3. Create a new dataset that is equal to the original dataset but with missing data filled in.
+
+# order the days of the week : Mon - Sun
+mxAvgStepsPerIntervalByDow <-mxAvgStepsPerIntervalByDow[,c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")]
+
+# 3. Create a new dataset (df_narpl) that is equal to the original dataset (df) where the missing data (NAs) will be filled in by avg values.
 df_narpl <-df
+
 # make copy of original steps variable
 df_narpl$steps.ori <-df_narpl$steps
-# loop through data frame "df_narpl" and replace NA steps with avg steps from replacement matrix
+
+# loop through the new data frame "df_narpl" and replace NA steps with avg steps from the replacement matrix (mxAvgStepsPerIntervalByDow).
 for (i in 1:nrow(df_narpl))
 {
      isteps <-df_narpl[i,"steps"]
@@ -192,11 +196,13 @@ for (i in 1:nrow(df_narpl))
           df_narpl[i,"steps"] <-mxAvgStepsPerIntervalByDow[iinterval,idayofweek]
      }
 }
-# 4. Make a histogram of the total number of steps taken each day and calculate the mean and median total number of steps taken per day.
+
+# create an array of the Total Steps per Day from the dataset with NAs replaced by avg values.
 TotalStepsPerDay_narpl <-tapply(X = df_narpl$steps, INDEX = df_narpl$date, FUN = sum, na.rm = TRUE)
 ```
+
 * #### The total number of missing values in the dataset is 2304.
-* #### A new data frame `df_narpl` was created where missing steps (NAs) were replaced with the average steps of the matching interval and day of the week. Parts of the update matrix `mxAvgStepsPerIntervalByDow` are shown below:
+* #### A new data frame `df_narpl` was created from the original data frame `df`. Missing steps (NAs) were replaced with the average steps of the matching interval and day of the week in this new data frame `df_narpl`. Parts of the matrix `mxAvgStepsPerIntervalByDow` used to replace the missing values are shown below:
 
 
 ```r
@@ -204,13 +210,13 @@ head(mxAvgStepsPerIntervalByDow)
 ```
 
 ```
-##      Friday   Monday Saturday   Sunday Thursday   Tuesday Wednesday
-## 0000      0 1.428571        0 0.000000    5.875 0.0000000     4.250
-## 0005      0 0.000000        0 0.000000    0.000 0.0000000     2.250
-## 0010      0 0.000000        0 0.000000    0.000 0.0000000     0.875
-## 0015      0 0.000000        0 0.000000    1.000 0.0000000     0.000
-## 0020      0 0.000000        0 0.000000    0.000 0.4444444     0.000
-## 0025      0 5.000000        0 7.428571    1.375 1.4444444     0.000
+##        Monday   Tuesday Wednesday Thursday Friday Saturday   Sunday
+## 0000 1.428571 0.0000000     4.250    5.875      0        0 0.000000
+## 0005 0.000000 0.0000000     2.250    0.000      0        0 0.000000
+## 0010 0.000000 0.0000000     0.875    0.000      0        0 0.000000
+## 0015 0.000000 0.0000000     0.000    1.000      0        0 0.000000
+## 0020 0.000000 0.4444444     0.000    0.000      0        0 0.000000
+## 0025 5.000000 1.4444444     0.000    1.375      0        0 7.428571
 ```
 
 ```r
@@ -218,19 +224,19 @@ head(mxAvgStepsPerIntervalByDow[97:117,],12)
 ```
 
 ```
-##         Friday    Monday  Saturday    Sunday Thursday   Tuesday Wednesday
-## 0800  63.85714  24.57143  23.42857  63.28571   43.250  55.55556   227.125
-## 0805  37.71429  42.00000  31.42857  80.85714   49.250  89.11111   134.375
-## 0810 165.85714  55.42857  51.28571 113.85714  234.875 149.00000   116.875
-## 0815 223.14286  14.71429  38.71429 119.14286  283.000 176.77778   215.500
-## 0820 257.28571 101.28571  28.57143 124.57143  232.500 170.33333   262.000
-## 0825 261.00000  29.71429  61.28571  68.14286  237.625 140.66667   266.000
-## 0830 273.85714 114.42857  92.42857 123.42857  185.875 163.22222   276.500
-## 0835 279.14286 225.85714 155.57143 101.14286  252.125 154.88889   273.000
-## 0840 233.71429 172.14286 143.71429 100.42857  264.500 177.55556   265.000
-## 0845 234.28571 155.57143 215.71429 104.28571  241.250 156.33333   151.375
-## 0850 328.57143 212.14286 209.57143 106.85714  225.750 116.22222   108.500
-## 0855 192.42857 197.00000 220.28571  49.00000  133.250 199.66667   172.250
+##         Monday   Tuesday Wednesday Thursday    Friday  Saturday    Sunday
+## 0800  24.57143  55.55556   227.125   43.250  63.85714  23.42857  63.28571
+## 0805  42.00000  89.11111   134.375   49.250  37.71429  31.42857  80.85714
+## 0810  55.42857 149.00000   116.875  234.875 165.85714  51.28571 113.85714
+## 0815  14.71429 176.77778   215.500  283.000 223.14286  38.71429 119.14286
+## 0820 101.28571 170.33333   262.000  232.500 257.28571  28.57143 124.57143
+## 0825  29.71429 140.66667   266.000  237.625 261.00000  61.28571  68.14286
+## 0830 114.42857 163.22222   276.500  185.875 273.85714  92.42857 123.42857
+## 0835 225.85714 154.88889   273.000  252.125 279.14286 155.57143 101.14286
+## 0840 172.14286 177.55556   265.000  264.500 233.71429 143.71429 100.42857
+## 0845 155.57143 156.33333   151.375  241.250 234.28571 215.71429 104.28571
+## 0850 212.14286 116.22222   108.500  225.750 328.57143 209.57143 106.85714
+## 0855 197.00000 199.66667   172.250  133.250 192.42857 220.28571  49.00000
 ```
 
 ```r
@@ -238,25 +244,25 @@ tail(mxAvgStepsPerIntervalByDow)
 ```
 
 ```
-##        Friday Monday Saturday    Sunday Thursday   Tuesday Wednesday
-## 2330 0.000000      0        0  2.428571    0.000 10.444444     3.375
-## 2335 0.000000      0        0 25.142857    0.000  5.111111     3.375
-## 2340 0.000000      0        0 13.428571    2.125  7.111111     0.000
-## 2345 0.000000      0        0  3.714286    0.000  0.000000     1.000
-## 2350 0.000000      0        0  0.000000    0.500  0.000000     1.000
-## 2355 1.142857      0        0  0.000000    0.000  2.222222     3.625
+##      Monday   Tuesday Wednesday Thursday   Friday Saturday    Sunday
+## 2330      0 10.444444     3.375    0.000 0.000000        0  2.428571
+## 2335      0  5.111111     3.375    0.000 0.000000        0 25.142857
+## 2340      0  7.111111     0.000    2.125 0.000000        0 13.428571
+## 2345      0  0.000000     1.000    0.000 0.000000        0  3.714286
+## 2350      0  0.000000     1.000    0.500 0.000000        0  0.000000
+## 2355      0  2.222222     3.625    0.000 1.142857        0  0.000000
 ```
 
 
 ```r
-# histogram
+# 4. Make a histogram of the total number of steps taken each day and calculate the mean and median total number of steps taken per day.
 hist(x = TotalStepsPerDay_narpl, breaks = 60, xlab = "Total Steps Per Day - NAs Replaced with Avg Values")
 ```
 
 ![](PA1_template_files/figure-html/Plot_TotalStepsPerDayNAsReplaced-1.png) 
 
 ```r
-# mean and median
+# calculate the mean and median from the dataset where NAs (missing data) were replaced
 (meanTotalStepsPerDay_narpl <-mean(TotalStepsPerDay_narpl))
 ```
 
@@ -273,7 +279,7 @@ hist(x = TotalStepsPerDay_narpl, breaks = 60, xlab = "Total Steps Per Day - NAs 
 ```
 
 ```r
-# compare with mean where incomplete records (NAs) were removed
+# compare with the mean where NAs were removed
 (meanDiff <-meanTotalStepsPerDay_narpl - meanTotalStepsPerDay)
 ```
 
@@ -282,7 +288,7 @@ hist(x = TotalStepsPerDay_narpl, breaks = 60, xlab = "Total Steps Per Day - NAs 
 ```
 
 ```r
-# compare with median where incomplete records (NAs) were removed
+# compare with the median where NAs were removed
 (medianDiff <-medianTotalStepsPerDay_narpl - medianTotalStepsPerDay)
 ```
 
@@ -290,19 +296,25 @@ hist(x = TotalStepsPerDay_narpl, breaks = 60, xlab = "Total Steps Per Day - NAs 
 ## [1] 620
 ```
 
-* #### The impact of imputing the missing data (replacing NAs with the average steps per mathcing interval and day of the week) changed the histogram of the total number of steps per day. The mean number of steps per day increased by 1467 steps and the median number of steps per day increased by 620 steps.
+* #### The impact of imputing the missing data (replacing NAs with appropriate average values instead of removing records with NAs) changed the histogram of the Total Number of Steps per Day.
+* #### The mean of the Total Number of Steps per Day increased to 10821 from 9354 , a difference of 1467 steps.
+* #### The median of the Total Number of Steps per Day increased to 11015 from 10395 , a difference of 620 steps.
 
 ----------------------------------------------------------------------------
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
 ```r
+# re-create the day of the week variable
 df_narpl$dayofweek <-weekdays(df_narpl$date)
-# 1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or a weekend day.
+
+# 1. Re-Create a factor variable (daytype) in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or a weekend day.
 df_narpl$daytype <-"weekday"
 df_narpl[substr(df_narpl$dayofweek,1,1) == "S", "daytype"] <-"weekend"
 df_narpl$daytype <-factor(df_narpl$daytype)
-# 2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekdays or weekend days (y-axis)
+
+# 2. Make a panel plot containing time series plots (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekdays or weekend days (y-axis)
+
 # create a matrix of average number of steps taken per interval per daytype (weekday & weekend)
 mxAvgStepsPerIntervalByDayType <-tapply(X = df_narpl$steps, INDEX = list(df_narpl$interval, df_narpl$daytype), FUN = mean, na.rm = TRUE)
 str(mxAvgStepsPerIntervalByDayType)
@@ -326,7 +338,8 @@ require(reshape2)
 
 ```r
 df_mlt <-melt(data = mxAvgStepsPerIntervalByDayType, measure.vars = c("weekday","weekend"), id.vars = c("interval"))
-# update column/variable names
+
+# update variable names
 names(df_mlt) <-c("timeInterval","dayType","avgSteps")
 str(df_mlt)
 ```
@@ -338,12 +351,9 @@ str(df_mlt)
 ##  $ avgSteps    : num  2.3107 0.45 0.175 0.2 0.0889 ...
 ```
 
+
 ```r
 # create panel plots of avg steps by interal for each day type (weekday & weekend)
-```
-
-
-```r
 require("lattice")
 ```
 
@@ -352,11 +362,11 @@ require("lattice")
 ```
 
 ```r
-xyplot(avgSteps ~ timeInterval | dayType, data = df_mlt, type = "l", layout = c(1,2), xlab = "5 Minute Intervals", ylab = "Avg Steps" )
+xyplot(avgSteps ~ timeInterval | dayType, data = df_mlt, type = "l", layout = c(1,2), xlab = "Intervals", ylab = "Avg Steps" )
 ```
 
 ![](PA1_template_files/figure-html/Plot_WeekdayVsWeekendActivity-1.png) 
 
-* #### The panel plots show a different pattern of interval activity for weekdays vs weekends --- one prominent difference is the increased activity between 10am and 6pm on weekends compared to the same period on weekdays.
+* #### The panel plots show a different pattern of Interval Activity for weekdays vs weekends --- one prominent difference is the increased activity between 10am and 6pm on weekends compared to the same period on weekdays.
 
 -----------------------------------------------
